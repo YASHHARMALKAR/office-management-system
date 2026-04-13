@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
 {
@@ -20,7 +21,7 @@ class EmployeeController extends Controller
      */
     public function create() {
     $companies = Company::all();
-    $employees = Employee::all();
+    $employees = Employee::where('position', 'Manager')->get();
     return view('employees.create', compact('companies','employees'));
 }
 
@@ -31,7 +32,7 @@ class EmployeeController extends Controller
 {
     $request->validate([
         'name' => 'required',
-        'email' => 'required',
+        'email' => 'required|email|unique:employees,email',
         'company_id' => 'required'
     ]);
 
@@ -54,7 +55,9 @@ class EmployeeController extends Controller
    public function edit(Employee $employee)
 {
     $companies = Company::all();
-    $employees = Employee::where('id','!=',$employee->id)->get();
+    $employees = Employee::where('position', 'Manager')
+                     ->where('id','!=',$employee->id)
+                     ->get();
 
     return view('employees.edit', compact('employee','companies','employees'));
 }
@@ -63,10 +66,20 @@ class EmployeeController extends Controller
      */
 public function update(Request $request, Employee $employee)
 {
-    $employee->update($request->all());
-    return redirect('/employees');
-}
+    $request->validate([
+        'name' => 'required',
+        'email' => [
+            'required',
+            'email',
+            Rule::unique('employees')->ignore($employee),
+        ],
+        'company_id' => 'required'
+    ]);
 
+    $employee->update($request->all());
+
+    return redirect('/employees');
+}   
     
     /**
      * Remove the specified resource from storage.

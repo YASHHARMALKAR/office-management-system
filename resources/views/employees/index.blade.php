@@ -3,25 +3,40 @@
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Navbar -->
 <div class="bg-gray-800 text-white p-4 flex justify-between">
-
     <span class="font-bold">Office System</span>
-
     <div class="flex gap-4">
         <a href="/" class="hover:underline">Home</a>
         <a href="/companies" class="hover:underline">Companies</a>
         <a href="/employees" class="hover:underline">Employees</a>
     </div>
-
 </div>
+
 <div class="p-6 bg-gray-100 min-h-screen">
 
     <h2 class="text-2xl font-bold mb-4">Employees</h2>
 
-    <a href="/employees/create"
-       class="bg-green-500 text-white px-4 py-2 rounded shadow">
-       Add Employee
-    </a>
+    <!-- ✅ FIXED ALIGNMENT -->
+    <div class="flex items-center justify-between mb-4">
+
+        <a href="/employees/create"
+           class="bg-green-500 text-white px-4 py-2 rounded shadow">
+           Add Employee
+        </a>
+
+        <div class="flex items-center gap-2">
+            <label class="font-semibold">Filter by Role:</label>
+            <select id="roleFilter" class="border p-2 rounded">
+                <option value="">All</option>
+                <option value="Manager">Manager</option>
+                <option value="Intern">Intern</option>
+                <option value="CEO">CEO</option>
+            </select>
+        </div>
+
+    </div>
 
     <div class="mt-6 overflow-x-auto">
       <table id="employeeTable" class="w-full bg-white shadow rounded">
@@ -32,6 +47,7 @@
                     <th class="p-3 text-left">Email</th>
                     <th class="p-3 text-left">Company</th>
                     <th class="p-3 text-left">Manager</th>
+                    <th class="p-3 text-left">Position</th>
                     <th class="p-3 text-left">Action</th>
                 </tr>
             </thead>
@@ -42,22 +58,26 @@
                     <td class="p-3">{{ $emp->name }}</td>
                     <td class="p-3">{{ $emp->email }}</td>
                     <td class="p-3">{{ optional($emp->company)->name ?? 'No Company' }}</td>
-                   <td class="p-3">{{ optional($emp->manager)->name ?? 'None' }}</td>
-                    <td class="p-3 align-middle">
-                        <div class="inline-flex items-center gap-2">
-                            <a href="/employees/{{$emp->id}}/edit"
-                               class="bg-blue-500 text-white px-3 py-1 rounded">
-                               Edit
-                            </a>
+                    <td class="p-3">{{ optional($emp->manager)->name ?? 'None' }}</td>
+                    <td class="p-3">{{ $emp->position }}</td>
 
-                            <form method="POST" action="/employees/{{$emp->id}}" class="inline-flex items-center m-0">
-                                @csrf
-                                @method('DELETE')
-                                <button class="bg-red-500 text-white px-3 py-1 rounded m-0">
-                                    Delete
-                                </button>
-                            </form>
-                        </div>
+                    <td class="p-3 flex gap-2 items-center">
+
+                        <a href="/employees/{{$emp->id}}/edit"
+                           class="bg-blue-500 text-white px-3 py-1 rounded">
+                           Edit
+                        </a>
+
+                         <form method="POST" action="/employees/{{$emp->id}}" class="inline-flex items-center m-0">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                onclick="return confirm('Are you sure?')"
+                                class="bg-red-500 text-white px-3 py-1 rounded">
+                                Delete
+                            </button>
+                        </form>
+
                     </td>
                 </tr>
                 @endforeach
@@ -70,6 +90,11 @@
 
 <script>
 $(document).ready(function () {
-    $('#employeeTable').DataTable();
+    var table = $('#employeeTable').DataTable();
+
+    
+    $('#roleFilter').on('change', function () {
+        table.column(4).search(this.value).draw();
+    });
 });
 </script>
