@@ -75,6 +75,20 @@ class="w-full border p-2 mb-2 rounded">
     <option value="Intern" {{ old('position', $employee->position) == 'Intern' ? 'selected' : '' }}>Intern</option>
     <option value="CEO" {{ old('position', $employee->position) == 'CEO' ? 'selected' : '' }}>CEO</option>
 </select>
+<!-- COUNTRY -->
+<select id="country" name="country" class="w-full border p-2 mb-2 rounded">
+    <option value="">Select Country</option>
+</select>
+
+<!-- STATE -->
+<select id="state" name="state" class="w-full border p-2 mb-2 rounded">
+    <option value="">Select State</option>
+</select>
+
+<!-- CITY -->
+<select id="city" name="city" class="w-full border p-2 mb-3 rounded">
+    <option value="">Select City</option>
+</select>
 
 <!-- SUBMIT -->
 <button type="submit"
@@ -84,3 +98,78 @@ Update
 
 </form>
 </div>  
+<script>
+let countryDropdown = document.getElementById("country");
+let stateDropdown = document.getElementById("state");
+let cityDropdown = document.getElementById("city");
+
+// Load countries
+fetch("https://countriesnow.space/api/v0.1/countries/positions")
+.then(res => res.json())
+.then(data => {
+    data.data.forEach(c => {
+        countryDropdown.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+    });
+
+    // ✅ Set selected country
+    countryDropdown.value = "{{ $employee->country }}";
+
+    // Trigger state load
+    if(countryDropdown.value){
+        loadStates(countryDropdown.value);
+    }
+});
+
+// Load states
+function loadStates(country){
+    fetch("https://countriesnow.space/api/v0.1/countries/states", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ country: country })
+    })
+    .then(res => res.json())
+    .then(data => {
+        stateDropdown.innerHTML = "<option>Select State</option>";
+
+        data.data.states.forEach(s => {
+            stateDropdown.innerHTML += `<option value="${s.name}">${s.name}</option>`;
+        });
+
+        // ✅ Set selected state
+        stateDropdown.value = "{{ $employee->state }}";
+
+        if(stateDropdown.value){
+            loadCities(country, stateDropdown.value);
+        }
+    });
+}
+
+// Load cities
+function loadCities(country, state){
+    fetch("https://countriesnow.space/api/v0.1/countries/state/cities", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ country: country, state: state })
+    })
+    .then(res => res.json())
+    .then(data => {
+        cityDropdown.innerHTML = "<option>Select City</option>";
+
+        data.data.forEach(city => {
+            cityDropdown.innerHTML += `<option value="${city}">${city}</option>`;
+        });
+
+        // ✅ Set selected city
+        cityDropdown.value = "{{ $employee->city }}";
+    });
+}
+
+// Events
+countryDropdown.addEventListener("change", function(){
+    loadStates(this.value);
+});
+
+stateDropdown.addEventListener("change", function(){
+    loadCities(countryDropdown.value, this.value);
+});
+</script>

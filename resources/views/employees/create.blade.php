@@ -100,58 +100,61 @@ Save
 
 <!-- KEEP YOUR API SCRIPT -->
 <script>
-const token = "YOUR_API_TOKEN";
+let countryDropdown = document.getElementById("country");
+let stateDropdown = document.getElementById("state");
+let cityDropdown = document.getElementById("city");
 
-if(token !== "YOUR_API_TOKEN") {
-
-// Load countries
-fetch("https://www.universal-tutorial.com/api/countries", {
-    headers: {
-        "Authorization": "Bearer " + token,
-        "Accept": "application/json"
-    }
-})
+// ✅ Load Countries
+fetch("https://countriesnow.space/api/v0.1/countries/positions")
 .then(res => res.json())
 .then(data => {
-    let country = document.getElementById("country");
-    data.forEach(c => {
-        country.innerHTML += `<option value="${c.country_name}">${c.country_name}</option>`;
+    data.data.forEach(c => {
+        countryDropdown.innerHTML += `<option value="${c.name}">${c.name}</option>`;
     });
-});
+})
+.catch(err => console.log(err));
 
-// Load states
-document.getElementById("country").addEventListener("change", function() {
-    fetch(`https://www.universal-tutorial.com/api/states/${this.value}`, {
+// ✅ Load States
+countryDropdown.addEventListener("change", function () {
+    stateDropdown.innerHTML = "<option value=''>Select State</option>";
+    cityDropdown.innerHTML = "<option value=''>Select City</option>";
+
+    fetch("https://countriesnow.space/api/v0.1/countries/states", {
+        method: "POST",
         headers: {
-            "Authorization": "Bearer " + token
-        }
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            country: this.value
+        })
     })
     .then(res => res.json())
     .then(data => {
-        let state = document.getElementById("state");
-        state.innerHTML = "<option value=''>Select State</option>";
-        data.forEach(s => {
-            state.innerHTML += `<option value="${s.state_name}">${s.state_name}</option>`;
+        data.data.states.forEach(s => {
+            stateDropdown.innerHTML += `<option value="${s.name}">${s.name}</option>`;
         });
     });
 });
 
-// Load cities
-document.getElementById("state").addEventListener("change", function() {
-    fetch(`https://www.universal-tutorial.com/api/cities/${this.value}`, {
+// ✅ Load Cities
+stateDropdown.addEventListener("change", function () {
+    cityDropdown.innerHTML = "<option value=''>Select City</option>";
+
+    fetch("https://countriesnow.space/api/v0.1/countries/state/cities", {
+        method: "POST",
         headers: {
-            "Authorization": "Bearer " + token
-        }
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            country: countryDropdown.value,
+            state: this.value
+        })
     })
     .then(res => res.json())
     .then(data => {
-        let city = document.getElementById("city");
-        city.innerHTML = "<option value=''>Select City</option>";
-        data.forEach(c => {
-            city.innerHTML += `<option value="${c.city_name}">${c.city_name}</option>`;
+        data.data.forEach(city => {
+            cityDropdown.innerHTML += `<option value="${city}">${city}</option>`;
         });
     });
 });
-
-}
-</script>   
+</script>
